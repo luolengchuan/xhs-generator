@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>小红书笔记生成器</title>
+<style>
+  :root {
+    --bg: #FAF9F7;
+    --card: #FFFFFF;
+    --red: #FF2442;
+    --red-soft: rgba(255, 36, 66, 0.07);
+    --text: #1A1A1A;
+    --text-2: #3A3A36;
+    --muted: #8F8D87;
+    --line: #EEECE7;
+    --line-2: #F5F3EF;
+    --green: #3FA45B;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(16, 15, 12, 0.03), 0 4px 14px rgba(16, 15, 12, 0.045);
+    --shadow-lift: 0 2px 4px rgba(16, 15, 12, 0.04), 0 10px 28px rgba(16, 15, 12, 0.08);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px 72px;
+    align-items: start;
+  }
+
+  /* ---------- 左侧输入区 ---------- */
+  .panel {
+    position: sticky;
+    top: 32px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #FF3D58, #FF2442 60%, #E81535);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255, 36, 66, 0.3);
+  }
+  .panel h1 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+  .panel .sub {
+    color: var(--muted);
+    font-size: 12px;
+    margin: 1px 0 0;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #55554F;
+    margin: 0 0 6px;
+  }
+
+  input[type="text"], input[type="password"], textarea {
+    width: 100%;
+    font: inherit;
+    font-size: 13px;
+    color: var(--text);
+    background: #FCFCFB;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 9px 11px;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    resize: vertical;
+  }
+  input::placeholder, textarea::placeholder { color: #B9B7B1; }
+
+  input:focus, textarea:focus {
+    border-color: var(--red);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--red-soft);
+  }
+
+  .field { margin-bottom: 16px; }
+
+  .btn-primary {
+    position: relative;
+    width: 100%;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(180deg, #FF3D58, var(--red));
+    border: none;
+    border-radius: 10px;
+    padding: 11px 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(255, 36, 66, 0.24);
+    transition: opacity 0.15s, transform 0.06s, box-shadow 0.15s;
+  }
+  .btn-primary:hover:not(:disabled) { box-shadow: 0 4px 14px rgba(255, 36, 66, 0.32); }
+  .btn-primary:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 4px rgba(255, 36, 66, 0.24); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+  .btn-primary.loading::before {
+    content: '';
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    margin-right: 8px;
+    vertical-align: -2px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    animation: spin 0.7s linear infinite;
+  }
+
+  .hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 10px 0 0;
+    font-size: 11.5px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .hint::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    flex: none;
+    border-radius: 50%;
+    background: #7FC98D;
+    box-shadow: 0 0 0 3px rgba(127, 201, 141, 0.18);
+  }
+
+  .error {
+    margin-top: 12px;
+    padding: 9px 11px;
+    border-radius: 9px;
+    background: var(--red-soft);
+    border: 1px solid rgba(255, 36, 66, 0.18);
+    color: #C4122C;
+    font-size: 12px;
+    word-break: break-all;
+  }
+  .error:empty { display: none; }
+
+  .key-row { display: flex; gap: 8px; align-items: center; }
+  .key-row input { flex: 1; }
+  .key-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  /* ---------- 右侧结果区 ---------- */
+  .styles-bar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .styles-bar h2 { font-size: 14px; font-weight: 600; margin: 0; }
+  .styles-bar span { font-size: 12px; color: var(--muted); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  }
+  .card:hover { box-shadow: var(--shadow-lift); transform: translateY(-2px); border-color: #E6E3DD; }
+  /* backwards 而非 both：动画结束后不保留 transform，否则会压掉 hover 上浮 */
+  .card.enter { animation: cardIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    background: var(--red-soft);
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+
+  .viral {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+  }
+  .viral b {
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+  .viral .track {
+    width: 44px;
+    height: 4px;
+    border-radius: 999px;
+    background: #F0EEEA;
+    overflow: hidden;
+  }
+  .viral .fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: #C9C6C0;
+    animation: grow 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .viral.v-high b { color: var(--red); }
+  .viral.v-high .fill { background: linear-gradient(90deg, #FF5C72, var(--red)); }
+  .viral.v-mid b { color: #E07A16; }
+  .viral.v-mid .fill { background: linear-gradient(90deg, #FFB259, #F08A1E); }
+
+  .card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.45;
+    margin: 0 0 10px;
+  }
+
+  .cover {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #8A5A12;
+    background: #FFF9EE;
+    border: 1px solid #F6E7C8;
+    border-radius: 9px;
+    padding: 8px 10px;
+    margin: 0 0 12px;
+  }
+  .cover-label {
+    flex: none;
+    font-size: 10px;
+    font-weight: 600;
+    color: #A9700C;
+    background: #FBEBCB;
+    border-radius: 5px;
+    padding: 1px 6px;
+    margin-top: 2px;
+    letter-spacing: 0.3px;
+  }
+
+  .body-text {
+    font-size: 13px;
+    color: var(--text-2);
+    white-space: pre-wrap;
+    margin: 0 0 14px;
+    flex: 1;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .tag {
+    font-size: 11px;
+    color: #5A7A9A;
+    background: #F4F7FA;
+    border-radius: 6px;
+    padding: 2px 8px;
+  }
+
+  .reason {
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px dashed var(--line);
+    padding-top: 10px;
+    margin-bottom: 12px;
+  }
+
+  .card-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: auto;
+  }
+  .actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  .picker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 10px;
+    background: #FBF9F6;
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    animation: cardIn 0.2s ease both;
+  }
+  .picker[hidden] { display: none; }
+  .picker-label { font-size: 11px; color: var(--muted); margin-right: 2px; }
+
+  .chip {
+    font: inherit;
+    font-size: 12px;
+    color: var(--text-2);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 11px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .chip:hover { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+
+  .btn-ghost {
+    font: inherit;
+    font-size: 12px;
+    color: #55554F;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 5px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .btn-ghost:hover { border-color: var(--red); color: var(--red); }
+  .btn-ghost.done { border-color: var(--green); color: var(--green); background: rgba(63, 164, 91, 0.06); }
+  .btn-ghost.on { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+
+  .card-err {
+    font-size: 11.5px;
+    color: #C4122C;
+    background: var(--red-soft);
+    border-radius: 8px;
+    padding: 7px 10px;
+    word-break: break-all;
+  }
+  .card-err[hidden] { display: none; }
+
+  .card-mask {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(2px);
+    color: #55554F;
+    font-size: 12.5px;
+  }
+  .card.busy { pointer-events: none; }
+  .card.busy .card-mask { display: flex; }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    border-radius: 50%;
+    border: 2px solid var(--red-soft);
+    border-top-color: var(--red);
+    animation: spin 0.7s linear infinite;
+  }
+
+  /* ---------- 加载态 ---------- */
+  .loader {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .loader-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-2);
+    margin-bottom: 12px;
+  }
+  .loader-text.swap { animation: swapIn 0.4s ease both; }
+  .loader-track {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--line-2);
+    overflow: hidden;
+  }
+  .loader-track i {
+    display: block;
+    width: 38%;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #FF5C72, var(--red));
+    animation: slide 1.5s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  }
+
+  .empty {
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    padding: 72px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.55);
+  }
+  .empty-icon {
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 14px;
+    border-radius: 14px;
+    background: var(--red-soft);
+    display: grid;
+    place-items: center;
+    font-size: 19px;
+  }
+  .empty b { display: block; color: var(--text-2); font-weight: 600; margin-bottom: 4px; }
+  .empty span { font-size: 12px; }
+
+  .skeleton {
+    height: 320px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: linear-gradient(90deg, #F4F2EE 25%, #FBF9F6 50%, #F4F2EE 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+
+  /* ---------- 提示条 ---------- */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 32px;
+    z-index: 50;
+    max-width: 80vw;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: #1A1A1A;
+    color: #fff;
+    font-size: 12.5px;
+    text-align: center;
+    opacity: 0;
+    transform: translate(-50%, 14px);
+    pointer-events: none;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.24s, transform 0.24s;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.err { background: #C4122C; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes grow { from { width: 0; } }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes swapIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes slide {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(263%); }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+    .loader-track i { transform: none; width: 100%; }
+    .viral .fill { animation: none; }
+  }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; padding: 20px 16px 48px; }
+    .panel { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- 左：输入 -->
+  <aside class="panel">
+    <div class="brand">
+      <span class="brand-mark">笔</span>
+      <div>
+        <h1>小红书笔记生成器</h1>
+        <p class="sub">一次生成 5 种风格的爆款笔记</p>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="product">产品名称</label>
+      <input id="product" type="text" placeholder="例：谷雨光甘草定精华水" />
+    </div>
+
+    <div class="field">
+      <label for="points">核心卖点</label>
+      <textarea id="points" rows="6" placeholder="例：光甘草定提亮、温和不刺激、适合敏感肌、湿敷不闷痘、平价"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="apikey">DeepSeek API Key</label>
+      <div class="key-row">
+        <input id="apikey" type="password" placeholder="sk-..." />
+        <button class="btn-ghost" id="toggleKey" type="button">显示</button>
+      </div>
+      <div class="key-note">只存在本机浏览器 localStorage，经本地代理转发</div>
+    </div>
+
+    <button class="btn-primary" id="generate">生成 5 篇笔记</button>
+    <p class="hint">预计消耗 8 点额度 · 约 40 秒完成</p>
+    <div class="error" id="error"></div>
+  </aside>
+
+  <!-- 右：结果 -->
+  <main>
+    <div class="styles-bar">
+      <h2>生成结果</h2>
+      <span id="counter"></span>
+    </div>
+    <div id="output"></div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STYLES = ['亲切分享', '专业测评', '搞笑段子', '干货攻略', '成分党'];
+const STORE_KEY = 'xhs_deepseek_key';
+const LOAD_STEPS = [
+  '正在拆解卖点…',
+  '匹配 5 种风格语气…',
+  '打磨标题…',
+  '撰写正文…',
+  '评估爆款指数…',
+  '马上就好…'
+];
+
+const $ = (id) => document.getElementById(id);
+const productEl = $('product');
+const pointsEl = $('points');
+const keyEl = $('apikey');
+const btn = $('generate');
+const errEl = $('error');
+const outEl = $('output');
+const counterEl = $('counter');
+const toastEl = $('toast');
+
+let loaderTimer = null;
+let lastUsed = { product: '', points: '' };
+
+keyEl.value = localStorage.getItem(STORE_KEY) || '';
+
+$('toggleKey').addEventListener('click', () => {
+  const shown = keyEl.type === 'text';
+  keyEl.type = shown ? 'password' : 'text';
+  $('toggleKey').textContent = shown ? '显示' : '隐藏';
+});
+
+/* ---------- 工具 ---------- */
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+  );
+}
+
+const getKey = () => keyEl.value.trim();
+
+function toast(msg, isErr) {
+  toastEl.textContent = msg;
+  toastEl.classList.toggle('err', !!isErr);
+  toastEl.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toastEl.classList.remove('show'), 2200);
+}
+
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) { /* 落到下面的兜底方案 */ }
+  }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.top = '-1000px';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  ta.remove();
+  return ok;
+}
+
+// 封面建议是给创作者看的，不进正文，所以复制时不带
+function noteToText(note) {
+  const tags = (Array.isArray(note.tags) ? note.tags : []).map((t) => '#' + t).join(' ');
+  const parts = [note.title || '', '', note.body || ''];
+  if (tags) parts.push('', tags);
+  return parts.join('\n').trim();
+}
+
+/* ---------- Prompt ---------- */
+
+function buildPrompt(product, points) {
+  return `你是小红书爆款笔记写手。围绕下面的产品，一次性写出 5 篇风格完全不同的笔记。
+
+产品名称：${product}
+核心卖点：${points}
+
+要求：
+1. 5 篇笔记分别对应这 5 种风格，顺序固定：亲切分享、专业测评、搞笑段子、干货攻略、成分党。
+2. 标题 20 字以内，有点击欲，可用一个方括号前缀（如【实测】【避雷】），不要堆砌 emoji。
+3. 正文 150-300 字，口语化，分段自然，可用短横线列点。不要出现"小红书"三个字。
+4. 话题标签 5-8 个，纯词，不带 # 号。
+5. viral 是 60-99 的整数爆款指数，基于标题吸引力、内容实用度、情绪共鸣综合打分，5 篇之间要有明显区分度。
+6. viralReason 用一句话说明这个分数是怎么来的。
+7. cover 是封面图建议，20-30 字，说清首图怎么拍、画面里放什么大字，不要写成正文的一部分。
+
+只输出 JSON，不要任何解释文字，不要 markdown 代码块：
+{"notes":[{"style":"亲切分享","title":"...","body":"...","tags":["...","..."],"viral":88,"viralReason":"...","cover":"..."}]}`;
+}
+
+function buildRewritePrompt(product, points, style, avoidTitles) {
+  const avoid = avoidTitles.length
+    ? `\n这一轮已经写过的标题（新的一篇不要和它们重复、不要只是换词）：\n${avoidTitles.map((t) => '- ' + t).join('\n')}\n`
+    : '';
+  return `你是小红书爆款笔记写手。围绕下面的产品，写 1 篇【${style}】风格的笔记。
+
+产品名称：${product}
+核心卖点：${points}
+${avoid}
+要求：
+1. 严格贴合【${style}】风格：语气、开头方式、段落节奏都要像这个风格，不要写成通用文案。
+2. 标题 20 字以内，有点击欲，可用一个方括号前缀，不要堆砌 emoji。
+3. 正文 150-300 字，口语化，分段自然，可用短横线列点。不要出现"小红书"三个字。
+4. 话题标签 5-8 个，纯词，不带 # 号。
+5. viral 是 60-99 的整数爆款指数，基于标题吸引力、内容实用度、情绪共鸣综合打分。
+6. viralReason 用一句话说明这个分数是怎么来的。
+7. cover 是封面图建议，20-30 字，说清首图怎么拍、画面里放什么大字。
+8. 换一个切入角度，别和已写过的版本撞车。
+
+只输出 JSON，不要任何解释文字，不要 markdown 代码块：
+{"note":{"style":"${style}","title":"...","body":"...","tags":["...","..."],"viral":88,"viralReason":"...","cover":"..."}}`;
+}
+
+/* ---------- 接口 ---------- */
+
+function extractText(data) {
+  if (data.content && Array.isArray(data.content)) {
+    return data.content.map((b) => (b.type === 'text' ? b.text : '')).join('');
+  }
+  if (data.choices && data.choices[0]) return data.choices[0].message.content || '';
+  return '';
+}
+
+function errorMessage(data) {
+  const m = data && data.error ? data.error.message || data.error : data && data.message;
+  if (typeof m === 'string') return m;
+  try { return JSON.stringify(m || data); } catch (e) { return '未知错误'; }
+}
+
+async function callAPI(apiKey, prompt) {
+  const res = await fetch('/api/generate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      apiKey,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    throw new Error('服务端返回了非 JSON 内容（HTTP ' + res.status + '）');
+  }
+  if (!res.ok) throw new Error(errorMessage(data));
+  return extractText(data);
+}
+
+function parseJsonLoose(text) {
+  const t = String(text).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  const start = t.indexOf('{');
+  const end = t.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('模型没有返回 JSON');
+  try {
+    return JSON.parse(t.slice(start, end + 1));
+  } catch (e) {
+    throw new Error('模型返回的 JSON 没解析成功，可以再点一次');
+  }
+}
+
+function parseNotes(text) {
+  const obj = parseJsonLoose(text);
+  const notes = obj.notes;
+  if (!Array.isArray(notes) || !notes.length) throw new Error('返回结果里没有 notes 数组');
+  return notes;
+}
+
+function parseSingleNote(text) {
+  const obj = parseJsonLoose(text);
+  const note = obj.note || (Array.isArray(obj.notes) ? obj.notes[0] : null);
+  if (!note || !note.title) throw new Error('返回结果里没有 note 对象');
+  return note;
+}
+
+/* ---------- 卡片 ---------- */
+
+function viralClass(v) {
+  if (v >= 90) return 'v-high';
+  if (v >= 80) return 'v-mid';
+  return 'v-low';
+}
+
+function renderCard(note, idx) {
+  const style = note.style || STYLES[idx] || '笔记';
+  const viral = Math.max(0, Math.min(100, Number(note.viral) || 0));
+  const tags = Array.isArray(note.tags) ? note.tags : [];
+
+  const card = document.createElement('article');
+  card.className = 'card enter';
+  card.dataset.idx = String(idx);
+  card._note = note;
+
+  card.innerHTML = `
+    <div class="card-head">
+      <span class="badge">${escapeHtml(style)}</span>
+      <span class="viral ${viralClass(viral)}">
+        <b>${viral}</b>
+        <span class="track"><span class="fill" style="width:${viral}%"></span></span>
+      </span>
+    </div>
+    <h3>${escapeHtml(note.title || '')}</h3>
+    ${note.cover ? `<div class="cover"><span class="cover-label">封面建议</span><span>${escapeHtml(note.cover)}</span></div>` : ''}
+    <p class="body-text">${escapeHtml(note.body || '')}</p>
+    ${tags.length ? `<div class="tags">${tags.map((t) => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+    ${note.viralReason ? `<div class="reason">爆款指数依据：${escapeHtml(note.viralReason)}</div>` : ''}
+    <div class="card-foot">
+      <div class="picker" hidden>
+        <span class="picker-label">换成</span>
+        ${STYLES.filter((s) => s !== style)
+          .map((s) => `<button type="button" class="chip" data-style="${escapeHtml(s)}">${escapeHtml(s)}</button>`)
+          .join('')}
+      </div>
+      <div class="actions">
+        <button type="button" class="btn-ghost act-copy">复制单篇</button>
+        <button type="button" class="btn-ghost act-rewrite">换风格重写</button>
+      </div>
+    </div>
+    <div class="card-err" hidden></div>
+  `;
+
+  const picker = card.querySelector('.picker');
+  const rewriteBtn = card.querySelector('.act-rewrite');
+
+  rewriteBtn.addEventListener('click', () => {
+    const opening = picker.hidden;
+    picker.hidden = !opening;
+    rewriteBtn.classList.toggle('on', opening);
+    rewriteBtn.textContent = opening ? '收起' : '换风格重写';
+  });
+
+  picker.querySelectorAll('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => rewriteCard(card, chip.dataset.style));
+  });
+
+  card.querySelector('.act-copy').addEventListener('click', async (e) => {
+    const b = e.currentTarget;
+    const ok = await copyText(noteToText(card._note));
+    b.textContent = ok ? '已复制 ✓' : '复制失败';
+    b.classList.toggle('done', ok);
+    clearTimeout(b._t);
+    b._t = setTimeout(() => {
+      b.textContent = '复制单篇';
+      b.classList.remove('done');
+    }, 1400);
+    toast(ok ? '这一篇已经复制好了' : '复制失败，请手动选中文字', !ok);
+  });
+
+  return card;
+}
+
+async function rewriteCard(card, style) {
+  const idx = Number(card.dataset.idx) || 0;
+  const product = productEl.value.trim() || lastUsed.product;
+  const points = pointsEl.value.trim() || lastUsed.points;
+  const apiKey = getKey();
+  const errBox = card.querySelector('.card-err');
+
+  errBox.hidden = true;
+  errEl.textContent = '';
+  if (!apiKey) {
+    errEl.textContent = '请先填写 DeepSeek API Key';
+    return;
+  }
+  if (!product || !points) {
+    errEl.textContent = '产品名称和核心卖点不能为空';
+    return;
+  }
+
+  const avoid = Array.from(document.querySelectorAll('.card h3'))
+    .map((h) => h.textContent.trim())
+    .filter(Boolean);
+
+  const mask = document.createElement('div');
+  mask.className = 'card-mask';
+  mask.innerHTML = '<span class="spinner"></span><span>正在换成「' + escapeHtml(style) + '」风格…</span>';
+  card.classList.add('busy');
+  card.appendChild(mask);
+
+  try {
+    const text = await callAPI(apiKey, buildRewritePrompt(product, points, style, avoid));
+    const note = parseSingleNote(text);
+    note.style = style; // 以用户点选的风格为准
+    card.replaceWith(renderCard(note, idx));
+    toast('已换成「' + style + '」风格');
+  } catch (e) {
+    mask.remove();
+    card.classList.remove('busy');
+    errBox.hidden = false;
+    errBox.textContent = '重写失败：' + e.message;
+  }
+}
+
+/* ---------- 加载态 ---------- */
+
+function setLoadText(text) {
+  const el = $('loadText');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove('swap');
+  void el.offsetWidth; // 重启动画
+  el.classList.add('swap');
+}
+
+function startLoader() {
+  const loader = document.createElement('div');
+  loader.className = 'loader';
+  loader.innerHTML =
+    '<div class="loader-head"><span class="spinner"></span><span class="loader-text" id="loadText"></span></div>' +
+    '<div class="loader-track"><i></i></div>';
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  for (let i = 0; i < 5; i++) {
+    const sk = document.createElement('div');
+    sk.className = 'skeleton';
+    grid.appendChild(sk);
+  }
+  outEl.innerHTML = '';
+  outEl.appendChild(loader);
+  outEl.appendChild(grid);
+
+  let step = 0;
+  setLoadText(LOAD_STEPS[step]);
+  clearInterval(loaderTimer);
+  loaderTimer = setInterval(() => {
+    step = (step + 1) % LOAD_STEPS.length;
+    setLoadText(LOAD_STEPS[step]);
+  }, 2600);
+}
+
+function stopLoader() {
+  clearInterval(loaderTimer);
+  loaderTimer = null;
+}
+
+function setBusy(on) {
+  btn.disabled = on;
+  btn.classList.toggle('loading', on);
+  btn.textContent = on ? '生成中…' : '生成 5 篇笔记';
+}
+
+/* ---------- 主流程 ---------- */
+
+function renderGrid(notes) {
+  const list = notes.slice(0, 5);
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  list.forEach((n, i) => {
+    const c = renderCard(n, i);
+    c.style.animationDelay = i * 60 + 'ms';
+    grid.appendChild(c);
+  });
+  outEl.innerHTML = '';
+  outEl.appendChild(grid);
+  counterEl.textContent = `共 ${list.length} 篇 · 每篇都能换风格重写`;
+}
+
+async function generate() {
+  const product = productEl.value.trim();
+  const points = pointsEl.value.trim();
+  const apiKey = getKey();
+
+  errEl.textContent = '';
+  if (!product) return (errEl.textContent = '请先填写产品名称');
+  if (!points) return (errEl.textContent = '请先填写核心卖点');
+  if (!apiKey) return (errEl.textContent = '请先填写 DeepSeek API Key');
+
+  localStorage.setItem(STORE_KEY, apiKey);
+  lastUsed = { product, points };
+  setBusy(true);
+  counterEl.textContent = '生成中…';
+  startLoader();
+
+  try {
+    const text = await callAPI(apiKey, buildPrompt(product, points));
+    const notes = parseNotes(text);
+    stopLoader();
+    renderGrid(notes);
+  } catch (e) {
+    stopLoader();
+    outEl.innerHTML =
+      '<div class="empty"><div class="empty-icon">😵</div><b>这次没生成出来</b><span>左侧有具体的错误信息，改完再点一次</span></div>';
+    counterEl.textContent = '';
+    errEl.textContent = e.message;
+  } finally {
+    setBusy(false);
+  }
+}
+
+btn.addEventListener('click', generate);
+
+outEl.innerHTML =
+  '<div class="empty"><div class="empty-icon">📝</div><b>还什么都没有</b>' +
+  '<span>填好产品名和卖点，点左边的红色按钮<br>约 40 秒后你会拿到 5 篇不同风格的成稿</span></div>';
+</script>
+</body>
+</html>
