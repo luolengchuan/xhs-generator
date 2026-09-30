@@ -52,6 +52,9 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 20px;
+    /* 加了风格库之后面板会变高，限高可滚动，否则 sticky 在视口里够不到底部 */
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
   }
 
   .brand {
@@ -271,9 +274,6 @@
   }
 
   .cover {
-    display: flex;
-    gap: 8px;
-    align-items: flex-start;
     font-size: 12px;
     line-height: 1.55;
     color: #8A5A12;
@@ -283,6 +283,7 @@
     padding: 8px 10px;
     margin: 0 0 12px;
   }
+  .cover-head { display: flex; gap: 8px; align-items: flex-start; }
   .cover-label {
     flex: none;
     font-size: 10px;
@@ -294,6 +295,17 @@
     margin-top: 2px;
     letter-spacing: 0.3px;
   }
+  .cover-idea { flex: 1; min-width: 0; }
+  .cover-specs {
+    display: grid;
+    gap: 5px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #F0DFC0;
+  }
+  .cover-spec { display: flex; gap: 8px; font-size: 11.5px; line-height: 1.5; }
+  .cover-spec .k { flex: none; width: 30px; font-weight: 600; color: #B0812E; }
+  .cover-spec .v { flex: 1; min-width: 0; }
 
   .body-text {
     font-size: 13px;
@@ -331,7 +343,7 @@
     gap: 10px;
     margin-top: auto;
   }
-  .actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 
   .picker {
     display: flex;
@@ -413,6 +425,110 @@
     border-top-color: var(--red);
     animation: spin 0.7s linear infinite;
   }
+
+  /* ---------- 风格模板库 ---------- */
+  .lib-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .lib-head label { margin: 0; }
+  .lib-count {
+    font-size: 11px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .style-lib { display: grid; gap: 6px; }
+
+  .style-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    background: #FCFCFB;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 7px 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .style-item:hover { border-color: #E9CDD3; background: #fff; }
+  .style-item.on { border-color: rgba(255, 36, 66, 0.35); background: var(--red-soft); }
+
+  .tick {
+    position: relative;
+    flex: none;
+    width: 14px;
+    height: 14px;
+    margin-top: 2px;
+    border-radius: 4px;
+    border: 1.5px solid #D9D6D0;
+    background: #fff;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .style-item.on .tick { border-color: var(--red); background: var(--red); }
+  .style-item.on .tick::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 3px;
+    height: 6.5px;
+    border: solid #fff;
+    border-width: 0 1.6px 1.6px 0;
+    transform: rotate(43deg);
+  }
+
+  .style-text { display: flex; flex-direction: column; min-width: 0; }
+  .style-text b { font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+  .style-item.on .style-text b { color: var(--red); }
+  .style-text i {
+    font-style: normal;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  /* ---------- 多平台适配 ---------- */
+  .adapt {
+    background: #FBF9F6;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px;
+    margin: 0 0 12px;
+    animation: cardIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .adapt[hidden] { display: none; }
+  .adapt-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .adapt-acts { display: flex; gap: 6px; }
+  .adapt-acts .btn-ghost { padding: 3px 9px; font-size: 11.5px; }
+  .adapt-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .adapt-text { font-size: 12.5px; color: var(--text-2); white-space: pre-wrap; }
+  .adapt.collapsed .adapt-text { display: none; }
+  .adapt.collapsed .adapt-title {
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .adapt.collapsed .adapt-head { margin-bottom: 0; }
 
   /* ---------- 加载态 ---------- */
   .loader {
@@ -531,7 +647,7 @@
 
   @media (max-width: 900px) {
     .app { grid-template-columns: 1fr; padding: 20px 16px 48px; }
-    .panel { position: static; }
+    .panel { position: static; max-height: none; overflow: visible; }
   }
 </style>
 </head>
@@ -544,7 +660,7 @@
       <span class="brand-mark">笔</span>
       <div>
         <h1>小红书笔记生成器</h1>
-        <p class="sub">一次生成 5 种风格的爆款笔记</p>
+        <p class="sub">勾选风格 · 一键生成 · 可转多平台</p>
       </div>
     </div>
 
@@ -559,6 +675,14 @@
     </div>
 
     <div class="field">
+      <div class="lib-head">
+        <label>风格模板库</label>
+        <span class="lib-count" id="styleCount"></span>
+      </div>
+      <div class="style-lib" id="styleLib"></div>
+    </div>
+
+    <div class="field">
       <label for="apikey">DeepSeek API Key</label>
       <div class="key-row">
         <input id="apikey" type="password" placeholder="sk-..." />
@@ -568,7 +692,7 @@
     </div>
 
     <button class="btn-primary" id="generate">生成 5 篇笔记</button>
-    <p class="hint">预计消耗 8 点额度 · 约 40 秒完成</p>
+    <p class="hint" id="hint">预计消耗 8 点额度 · 约 40 秒完成</p>
     <div class="error" id="error"></div>
   </aside>
 
@@ -585,16 +709,32 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const STYLES = ['亲切分享', '专业测评', '搞笑段子', '干货攻略', '成分党'];
-const STORE_KEY = 'xhs_deepseek_key';
-const LOAD_STEPS = [
-  '正在拆解卖点…',
-  '匹配 5 种风格语气…',
-  '打磨标题…',
-  '撰写正文…',
-  '评估爆款指数…',
-  '马上就好…'
+// 风格模板库：面板里展示、可勾选，只有勾上的才会生成
+const STYLE_LIB = [
+  { name: '亲切分享', desc: '像朋友安利，第一人称' },
+  { name: '专业测评', desc: '横向对比，理性可信' },
+  { name: '搞笑段子', desc: '自嘲玩梗，结尾反转' },
+  { name: '干货攻略', desc: '步骤清单，收藏向' },
+  { name: '成分党', desc: '成分拆解，硬核分析' }
 ];
+const ALL_STYLES = STYLE_LIB.map((s) => s.name);
+
+// 多平台适配目标
+const PLATFORMS = [
+  {
+    key: 'gzh',
+    label: '公众号图文',
+    tip: '标题 15-30 字，比小红书标题更完整、信息量更大；正文 500-700 字，开头一句就抓住人，中间用小标题或短横线分成 3 个小节左右，结尾一句自然的引导（关注 / 留言 / 收藏）；不要话题标签，不要堆砌 emoji。'
+  },
+  {
+    key: 'short',
+    label: '短视频口播稿',
+    tip: '写成 45-60 秒、能直接照着念的口播稿，全文 300-400 字；用【0-3秒】【3-15秒】【15-40秒】【结尾】这样的分段标注节奏，每句尽量短、口语、一口气念得完；需要时在行末用括号补一句画面提示（如"（产品怼近镜头）"）；不要话题标签。'
+  }
+];
+
+const STORE_KEY = 'xhs_deepseek_key';
+const STYLES_KEY = 'xhs_styles';
 
 const $ = (id) => document.getElementById(id);
 const productEl = $('product');
@@ -605,6 +745,9 @@ const errEl = $('error');
 const outEl = $('output');
 const counterEl = $('counter');
 const toastEl = $('toast');
+const hintEl = $('hint');
+const styleLibEl = $('styleLib');
+const styleCountEl = $('styleCount');
 
 let loaderTimer = null;
 let lastUsed = { product: '', points: '' };
@@ -616,6 +759,50 @@ $('toggleKey').addEventListener('click', () => {
   keyEl.type = shown ? 'password' : 'text';
   $('toggleKey').textContent = shown ? '显示' : '隐藏';
 });
+
+/* ---------- 风格模板库 ---------- */
+
+function loadStyles() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STYLES_KEY) || 'null');
+    const kept = Array.isArray(raw) ? raw.filter((s) => ALL_STYLES.indexOf(s) >= 0) : [];
+    return kept.length ? kept : ALL_STYLES.slice();
+  } catch (e) {
+    return ALL_STYLES.slice();
+  }
+}
+
+let selected = loadStyles();
+const pickedStyles = () => ALL_STYLES.filter((s) => selected.indexOf(s) >= 0);
+
+function renderStyleLib() {
+  const picked = pickedStyles();
+  styleLibEl.innerHTML = STYLE_LIB.map((s) => {
+    const on = picked.indexOf(s.name) >= 0;
+    return `<button type="button" class="style-item${on ? ' on' : ''}" data-style="${escapeHtml(s.name)}" aria-pressed="${on}">
+      <span class="tick"></span>
+      <span class="style-text"><b>${escapeHtml(s.name)}</b><i>${escapeHtml(s.desc)}</i></span>
+    </button>`;
+  }).join('');
+  styleLibEl.querySelectorAll('.style-item').forEach((el) => {
+    el.addEventListener('click', () => toggleStyle(el.dataset.style));
+  });
+  styleCountEl.textContent = `已选 ${picked.length} / ${ALL_STYLES.length}`;
+  syncGenerateUI();
+}
+
+function toggleStyle(name) {
+  const i = selected.indexOf(name);
+  if (i >= 0) {
+    if (selected.length === 1) return toast('至少留一种风格', true);
+    selected.splice(i, 1);
+  } else {
+    selected.push(name);
+  }
+  localStorage.setItem(STYLES_KEY, JSON.stringify(pickedStyles()));
+  renderStyleLib();
+  refreshEmpty();
+}
 
 /* ---------- 工具 ---------- */
 
@@ -665,23 +852,30 @@ function noteToText(note) {
 
 /* ---------- Prompt ---------- */
 
-function buildPrompt(product, points) {
-  return `你是小红书爆款笔记写手。围绕下面的产品，一次性写出 5 篇风格完全不同的笔记。
+function buildPrompt(product, points, styles) {
+  const n = styles.length;
+  return `你是小红书爆款笔记写手。围绕下面的产品，一次性写出 ${n} 篇风格完全不同的笔记。
 
 产品名称：${product}
 核心卖点：${points}
 
 要求：
-1. 5 篇笔记分别对应这 5 种风格，顺序固定：亲切分享、专业测评、搞笑段子、干货攻略、成分党。
+1. 一共 ${n} 篇，分别对应这 ${n} 种风格，顺序固定：${styles.join('、')}。
 2. 标题 20 字以内，有点击欲，可用一个方括号前缀（如【实测】【避雷】），不要堆砌 emoji。
 3. 正文 150-300 字，口语化，分段自然，可用短横线列点。不要出现"小红书"三个字。
 4. 话题标签 5-8 个，纯词，不带 # 号。
-5. viral 是 60-99 的整数爆款指数，基于标题吸引力、内容实用度、情绪共鸣综合打分，5 篇之间要有明显区分度。
+5. viral 是 60-99 的整数爆款指数，基于标题吸引力、内容实用度、情绪共鸣综合打分，${n} 篇之间要有明显区分度。
 6. viralReason 用一句话说明这个分数是怎么来的。
-7. cover 是封面图建议，20-30 字，说清首图怎么拍、画面里放什么大字，不要写成正文的一部分。
+7. cover 是封面图方案对象，5 个字段都要具体到能直接照着拍，不要写"简洁大方"这类空话：
+   - idea：一句话说清首图拍什么（15-25 字）
+   - layout：构图方式，从中心构图 / 三分法 / 对角线 / 俯拍平铺 / 左右分屏里选一个并说明
+   - tone：色调，给出主色 + 光线氛围，如"奶油白打底 + 浅杏色，低饱和柔光"
+   - subject：主体位置，如"产品立在画面左下三分点，占画面约 1/3"
+   - text：封面大字，8 字以内，要有钩子
+8. 每篇的 cover 换一种拍法，不要 ${n} 篇共用一个套路。
 
 只输出 JSON，不要任何解释文字，不要 markdown 代码块：
-{"notes":[{"style":"亲切分享","title":"...","body":"...","tags":["...","..."],"viral":88,"viralReason":"...","cover":"..."}]}`;
+{"notes":[{"style":"${styles[0]}","title":"...","body":"...","tags":["...","..."],"viral":88,"viralReason":"...","cover":{"idea":"...","layout":"...","tone":"...","subject":"...","text":"..."}}]}`;
 }
 
 function buildRewritePrompt(product, points, style, avoidTitles) {
@@ -700,11 +894,32 @@ ${avoid}
 4. 话题标签 5-8 个，纯词，不带 # 号。
 5. viral 是 60-99 的整数爆款指数，基于标题吸引力、内容实用度、情绪共鸣综合打分。
 6. viralReason 用一句话说明这个分数是怎么来的。
-7. cover 是封面图建议，20-30 字，说清首图怎么拍、画面里放什么大字。
+7. cover 是封面图方案对象，字段 idea / layout / tone / subject / text，含义和上面一致，每个都要具体到能照着拍。
 8. 换一个切入角度，别和已写过的版本撞车。
 
 只输出 JSON，不要任何解释文字，不要 markdown 代码块：
-{"note":{"style":"${style}","title":"...","body":"...","tags":["...","..."],"viral":88,"viralReason":"...","cover":"..."}}`;
+{"note":{"style":"${style}","title":"...","body":"...","tags":["...","..."],"viral":88,"viralReason":"...","cover":{"idea":"...","layout":"...","tone":"...","subject":"...","text":"..."}}}`;
+}
+
+// 把一篇成稿改写成另一个平台的稿子
+function buildAdaptPrompt(platform, product, points, note) {
+  return `你是资深内容编辑。把下面这篇小红书笔记改写成【${platform.label}】。
+
+产品名称：${product}
+核心卖点：${points}
+
+原笔记标题：${note.title || ''}
+原笔记正文：
+${note.body || ''}
+
+要求：
+1. ${platform.tip}
+2. 保留原笔记的核心信息和卖点，不要新增没有依据的功效宣称。
+3. 不要出现"小红书"三个字。
+4. title 是这篇成稿的标题；body 是可以直接发布 / 直接照着念的完整内容，不要在 body 里解释你在做什么。
+
+只输出 JSON，不要任何解释文字，不要 markdown 代码块：
+{"platform":"${platform.label}","title":"...","body":"..."}`;
 }
 
 /* ---------- 接口 ---------- */
@@ -768,6 +983,13 @@ function parseSingleNote(text) {
   return note;
 }
 
+function parseAdapt(text, platform) {
+  const obj = parseJsonLoose(text);
+  const body = obj.body || obj.content || obj.text;
+  if (!body) throw new Error('返回结果里没有正文');
+  return { platform: platform.key, label: platform.label, title: obj.title || '', body };
+}
+
 /* ---------- 卡片 ---------- */
 
 function viralClass(v) {
@@ -776,8 +998,34 @@ function viralClass(v) {
   return 'v-low';
 }
 
+// 封面方案：模型回对象就展开成 构图/色调/主体/大字，回字符串就退回原来的一行版
+function renderCover(cover) {
+  if (!cover) return '';
+  if (typeof cover === 'string') {
+    return `<div class="cover"><div class="cover-head"><span class="cover-label">封面建议</span><span class="cover-idea">${escapeHtml(cover)}</span></div></div>`;
+  }
+  const idea = cover.idea || '';
+  const specs = [
+    ['构图', cover.layout],
+    ['色调', cover.tone],
+    ['主体', cover.subject],
+    ['大字', cover.text]
+  ].filter((pair) => pair[1]);
+  if (!idea && !specs.length) return '';
+
+  return `
+    <div class="cover">
+      ${idea ? `<div class="cover-head"><span class="cover-label">封面方案</span><span class="cover-idea">${escapeHtml(idea)}</span></div>` : ''}
+      ${specs.length
+        ? `<div class="cover-specs">${specs
+            .map(([k, v]) => `<div class="cover-spec"><span class="k">${k}</span><span class="v">${escapeHtml(v)}</span></div>`)
+            .join('')}</div>`
+        : ''}
+    </div>`;
+}
+
 function renderCard(note, idx) {
-  const style = note.style || STYLES[idx] || '笔记';
+  const style = note.style || ALL_STYLES[idx] || '笔记';
   const viral = Math.max(0, Math.min(100, Number(note.viral) || 0));
   const tags = Array.isArray(note.tags) ? note.tags : [];
 
@@ -795,37 +1043,68 @@ function renderCard(note, idx) {
       </span>
     </div>
     <h3>${escapeHtml(note.title || '')}</h3>
-    ${note.cover ? `<div class="cover"><span class="cover-label">封面建议</span><span>${escapeHtml(note.cover)}</span></div>` : ''}
+    ${renderCover(note.cover)}
     <p class="body-text">${escapeHtml(note.body || '')}</p>
     ${tags.length ? `<div class="tags">${tags.map((t) => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
     ${note.viralReason ? `<div class="reason">爆款指数依据：${escapeHtml(note.viralReason)}</div>` : ''}
+    <div class="adapt" hidden></div>
     <div class="card-foot">
-      <div class="picker" hidden>
+      <div class="picker picker-adapt" hidden>
+        <span class="picker-label">转成</span>
+        ${PLATFORMS.map((p) => `<button type="button" class="chip" data-platform="${p.key}">${escapeHtml(p.label)}</button>`).join('')}
+      </div>
+      <div class="picker picker-rewrite" hidden>
         <span class="picker-label">换成</span>
-        ${STYLES.filter((s) => s !== style)
+        ${ALL_STYLES.filter((s) => s !== style)
           .map((s) => `<button type="button" class="chip" data-style="${escapeHtml(s)}">${escapeHtml(s)}</button>`)
           .join('')}
       </div>
       <div class="actions">
         <button type="button" class="btn-ghost act-copy">复制单篇</button>
+        <button type="button" class="btn-ghost act-adapt">多平台适配</button>
         <button type="button" class="btn-ghost act-rewrite">换风格重写</button>
       </div>
     </div>
     <div class="card-err" hidden></div>
   `;
 
-  const picker = card.querySelector('.picker');
+  const adaptPicker = card.querySelector('.picker-adapt');
+  const rewritePicker = card.querySelector('.picker-rewrite');
+  const adaptBtn = card.querySelector('.act-adapt');
   const rewriteBtn = card.querySelector('.act-rewrite');
 
+  // 两个 picker 同时只开一个
+  const togglePicker = (picker, button, open, label) => {
+    picker.hidden = !open;
+    button.classList.toggle('on', open);
+    button.textContent = open ? '收起' : label;
+  };
+
   rewriteBtn.addEventListener('click', () => {
-    const opening = picker.hidden;
-    picker.hidden = !opening;
-    rewriteBtn.classList.toggle('on', opening);
-    rewriteBtn.textContent = opening ? '收起' : '换风格重写';
+    const opening = rewritePicker.hidden;
+    if (opening) togglePicker(adaptPicker, adaptBtn, false, '多平台适配');
+    togglePicker(rewritePicker, rewriteBtn, opening, '换风格重写');
   });
 
-  picker.querySelectorAll('.chip').forEach((chip) => {
-    chip.addEventListener('click', () => rewriteCard(card, chip.dataset.style));
+  adaptBtn.addEventListener('click', () => {
+    const opening = adaptPicker.hidden;
+    if (opening) togglePicker(rewritePicker, rewriteBtn, false, '换风格重写');
+    togglePicker(adaptPicker, adaptBtn, opening, '多平台适配');
+  });
+
+  rewritePicker.querySelectorAll('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      togglePicker(rewritePicker, rewriteBtn, false, '换风格重写');
+      rewriteCard(card, chip.dataset.style);
+    });
+  });
+
+  adaptPicker.querySelectorAll('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const platform = PLATFORMS.filter((p) => p.key === chip.dataset.platform)[0];
+      togglePicker(adaptPicker, adaptBtn, false, '多平台适配');
+      adaptCard(card, platform);
+    });
   });
 
   card.querySelector('.act-copy').addEventListener('click', async (e) => {
@@ -842,6 +1121,76 @@ function renderCard(note, idx) {
   });
 
   return card;
+}
+
+/* ---------- 多平台适配 ---------- */
+
+function paintAdapt(card, a) {
+  const box = card.querySelector('.adapt');
+  box.hidden = false;
+  box.classList.remove('collapsed');
+  box.innerHTML = `
+    <div class="adapt-head">
+      <span class="badge">${escapeHtml(a.label)}</span>
+      <span class="adapt-acts">
+        <button type="button" class="btn-ghost act-adapt-copy">复制</button>
+        <button type="button" class="btn-ghost act-adapt-fold">收起</button>
+      </span>
+    </div>
+    ${a.title ? `<div class="adapt-title">${escapeHtml(a.title)}</div>` : ''}
+    <div class="adapt-text">${escapeHtml(a.body)}</div>
+  `;
+
+  box.querySelector('.act-adapt-copy').addEventListener('click', async (e) => {
+    const b = e.currentTarget;
+    const ok = await copyText([a.title, '', a.body].join('\n').trim());
+    b.textContent = ok ? '已复制 ✓' : '复制失败';
+    b.classList.toggle('done', ok);
+    clearTimeout(b._t);
+    b._t = setTimeout(() => {
+      b.textContent = '复制';
+      b.classList.remove('done');
+    }, 1400);
+    toast(ok ? '适配稿已经复制好了' : '复制失败，请手动选中文字', !ok);
+  });
+
+  box.querySelector('.act-adapt-fold').addEventListener('click', (e) => {
+    const folded = box.classList.toggle('collapsed');
+    e.currentTarget.textContent = folded ? '展开' : '收起';
+  });
+}
+
+async function adaptCard(card, platform) {
+  if (!platform) return;
+  const product = productEl.value.trim() || lastUsed.product;
+  const points = pointsEl.value.trim() || lastUsed.points;
+  const apiKey = getKey();
+  const errBox = card.querySelector('.card-err');
+
+  errBox.hidden = true;
+  errEl.textContent = '';
+  if (!apiKey) return (errEl.textContent = '请先填写 DeepSeek API Key');
+  if (!product || !points) return (errEl.textContent = '产品名称和核心卖点不能为空');
+
+  const mask = document.createElement('div');
+  mask.className = 'card-mask';
+  mask.innerHTML = '<span class="spinner"></span><span>正在转成「' + escapeHtml(platform.label) + '」…</span>';
+  card.classList.add('busy');
+  card.appendChild(mask);
+
+  try {
+    const text = await callAPI(apiKey, buildAdaptPrompt(platform, product, points, card._note));
+    const adapted = parseAdapt(text, platform);
+    card._adapt = adapted;
+    paintAdapt(card, adapted);
+    toast('已经转成「' + platform.label + '」');
+  } catch (e) {
+    errBox.hidden = false;
+    errBox.textContent = '适配失败：' + e.message;
+  } finally {
+    mask.remove();
+    card.classList.remove('busy');
+  }
 }
 
 async function rewriteCard(card, style) {
@@ -897,7 +1246,17 @@ function setLoadText(text) {
   el.classList.add('swap');
 }
 
-function startLoader() {
+function startLoader(count) {
+  const steps = [
+    '正在拆解卖点…',
+    `匹配 ${count} 种风格语气…`,
+    '打磨标题…',
+    '设计封面方案…',
+    '撰写正文…',
+    '评估爆款指数…',
+    '马上就好…'
+  ];
+
   const loader = document.createElement('div');
   loader.className = 'loader';
   loader.innerHTML =
@@ -905,7 +1264,7 @@ function startLoader() {
     '<div class="loader-track"><i></i></div>';
   const grid = document.createElement('div');
   grid.className = 'grid';
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < Math.min(count, 6); i++) {
     const sk = document.createElement('div');
     sk.className = 'skeleton';
     grid.appendChild(sk);
@@ -915,11 +1274,11 @@ function startLoader() {
   outEl.appendChild(grid);
 
   let step = 0;
-  setLoadText(LOAD_STEPS[step]);
+  setLoadText(steps[step]);
   clearInterval(loaderTimer);
   loaderTimer = setInterval(() => {
-    step = (step + 1) % LOAD_STEPS.length;
-    setLoadText(LOAD_STEPS[step]);
+    step = (step + 1) % steps.length;
+    setLoadText(steps[step]);
   }, 2600);
 }
 
@@ -928,16 +1287,26 @@ function stopLoader() {
   loaderTimer = null;
 }
 
+const genLabel = () => `生成 ${pickedStyles().length} 篇笔记`;
+
+// 勾选变化时同步按钮文案和额度提示；生成中不动，免得覆盖掉「生成中…」
+function syncGenerateUI() {
+  if (btn.disabled) return;
+  const n = pickedStyles().length;
+  btn.textContent = genLabel();
+  hintEl.textContent = `预计消耗 ${Math.round(n * 1.6)} 点额度 · 约 ${n * 8} 秒完成`;
+}
+
 function setBusy(on) {
   btn.disabled = on;
   btn.classList.toggle('loading', on);
-  btn.textContent = on ? '生成中…' : '生成 5 篇笔记';
+  btn.textContent = on ? '生成中…' : genLabel();
 }
 
 /* ---------- 主流程 ---------- */
 
-function renderGrid(notes) {
-  const list = notes.slice(0, 5);
+function renderGrid(notes, count) {
+  const list = notes.slice(0, count || notes.length);
   const grid = document.createElement('div');
   grid.className = 'grid';
   list.forEach((n, i) => {
@@ -947,30 +1316,45 @@ function renderGrid(notes) {
   });
   outEl.innerHTML = '';
   outEl.appendChild(grid);
-  counterEl.textContent = `共 ${list.length} 篇 · 每篇都能换风格重写`;
+  counterEl.textContent = `共 ${list.length} 篇 · 每篇可换风格重写 / 转多平台`;
+}
+
+function showEmpty() {
+  const n = pickedStyles().length;
+  outEl.innerHTML =
+    '<div class="empty"><div class="empty-icon">📝</div><b>还什么都没有</b>' +
+    `<span>填好产品名和卖点，点左边的红色按钮<br>约 ${n * 8} 秒后你会拿到 ${n} 篇不同风格的成稿</span></div>`;
+  counterEl.textContent = '';
+}
+
+// 只在空状态时更新文案，已有结果就留着不动
+function refreshEmpty() {
+  if (outEl.querySelector('.empty')) showEmpty();
 }
 
 async function generate() {
   const product = productEl.value.trim();
   const points = pointsEl.value.trim();
   const apiKey = getKey();
+  const styles = pickedStyles();
 
   errEl.textContent = '';
   if (!product) return (errEl.textContent = '请先填写产品名称');
   if (!points) return (errEl.textContent = '请先填写核心卖点');
+  if (!styles.length) return (errEl.textContent = '至少勾选一种风格');
   if (!apiKey) return (errEl.textContent = '请先填写 DeepSeek API Key');
 
   localStorage.setItem(STORE_KEY, apiKey);
   lastUsed = { product, points };
   setBusy(true);
   counterEl.textContent = '生成中…';
-  startLoader();
+  startLoader(styles.length);
 
   try {
-    const text = await callAPI(apiKey, buildPrompt(product, points));
+    const text = await callAPI(apiKey, buildPrompt(product, points, styles));
     const notes = parseNotes(text);
     stopLoader();
-    renderGrid(notes);
+    renderGrid(notes, styles.length);
   } catch (e) {
     stopLoader();
     outEl.innerHTML =
@@ -984,9 +1368,8 @@ async function generate() {
 
 btn.addEventListener('click', generate);
 
-outEl.innerHTML =
-  '<div class="empty"><div class="empty-icon">📝</div><b>还什么都没有</b>' +
-  '<span>填好产品名和卖点，点左边的红色按钮<br>约 40 秒后你会拿到 5 篇不同风格的成稿</span></div>';
+renderStyleLib();
+showEmpty();
 </script>
 </body>
 </html>
